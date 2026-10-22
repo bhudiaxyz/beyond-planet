@@ -14,6 +14,8 @@ import {
   type QualityLevel,
 } from '../config';
 
+const yieldToMain = (): Promise<void> => new Promise(r => setTimeout(r, 0));
+
 /**
  * Game shell: wires the renderer, world, controller, HUD, and the main
  * requestAnimationFrame loop with separated update / render phases.
@@ -40,30 +42,53 @@ export class Game {
 
   private running = false;
 
-  constructor(seed: number) {
-    this.qualityLevel = FORCED_QUALITY ?? detectQuality();
-    const quality = QUALITY_PRESETS[this.qualityLevel];
+  private constructor(
+    renderer: Renderer,
+    world: World,
+    controller: CameraController,
+    hud: Hud,
+    interaction: InteractionSystem,
+    qualityLevel: QualityLevel,
+  ) {
+    this.renderer = renderer;
+    this.world = world;
+    this.controller = controller;
+    this.hud = hud;
+    this.interaction = interaction;
+    this.qualityLevel = qualityLevel;
+  }
 
+  static async create(seed: number): Promise<Game> {
+    const qualityLevel = FORCED_QUALITY ?? detectQuality();
+    const quality = QUALITY_PRESETS[qualityLevel];
     const container = document.getElementById('app')!;
-    this.renderer = new Renderer(container, quality);
-    this.hud = new Hud();
-    this.hud.setSeed(seed);
-    this.hud.setQuality(this.qualityLevel);
 
-    this.world = new World(seed, quality, this.renderer.webgl);
-    this.controller = new CameraController(this.world.terrain, this.renderer.webgl.domElement);
-    this.controller.caveNetwork = this.world.caves;
-    this.renderer.configureOutput(
-      this.world.scene,
-      this.controller.camera,
-      this.world.environment.uniforms,
-    );
+    const renderer = new Renderer(container, quality);
+    const hud = new Hud();
+    hud.setSeed(seed);
+    hud.setQuality(qualityLevel);
 
-    const spawn = this.world.findSpawn();
-    this.controller.spawnAt(spawn.x, spawn.z);
-    this.world.warmup(this.controller.camera.position);
+    await yieldToMain();
 
-    this.interaction = new InteractionSystem(this.hud.promptEl, this.hud.messageEl);
+    const world = new World(seed, quality, renderer.webgl);
+    const controller = new CameraController(world.terrain, renderer.webgl.domElement);
+    controller.caveNetwork = world.caves;
+    renderer.configureOutput(world.scene, controller.camera, world.environment.uniforms);
+
+    const spawn = world.findSpawn();
+    controller.spawnAt(spawn.x, spawn.z);
+
+    await yieldToMain();
+
+    world.warmup(controller.camera.position);
+
+    const interaction = new InteractionSystem(hud.promptEl, hud.messageEl);
+    const game = new Game(renderer, world, controller, hud, interaction, qualityLevel);
+    game._bind();
+    return game;
+  }
+
+  private _bind(): void {
     this.hud.bindHackMenu({
       weatherOptions: WEATHER_OPTIONS,
       getState: () => ({

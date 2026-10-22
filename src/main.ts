@@ -9,18 +9,13 @@ if (params.has('noui')) {
   // Clean screenshot mode: no HUD, no loading screen, world straight away.
   document.getElementById('hud')!.style.display = 'none';
   document.getElementById('loading-screen')!.style.display = 'none';
-  const game = new Game(seed);
-  game.start();
+  Game.create(seed).then(game => game.start());
 } else {
-  // Let the loading screen paint a frame first, then forge the world behind it
-  // (the heavy build blocks the main thread, but the loading animation is
-  // composited so it keeps moving). Once ready, the loading screen lets the
-  // player click into an already-loaded world.
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      const game = new Game(seed);
-      game.start();
-      game.runIntro();
-    });
-  });
+  // Game.create yields to the main thread between heavy phases so the loading
+  // animation keeps compositing while the world builds behind it.
+  (async () => {
+    const game = await Game.create(seed);
+    game.start();
+    game.runIntro();
+  })();
 }
