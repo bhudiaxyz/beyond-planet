@@ -1,8 +1,8 @@
 /* ============================================================================
    Beyond Planet — UI theme
-   A spare, weighty fantasy look: Trajan-style display caps, warm gold on
-   near-black, thin hairline rules. All overlay chrome fades in/out so the
-   world stays the hero.
+   Sci-fi/technical look: condensed sans display, warm gold on near-black,
+   thin hairline rules. All overlay chrome fades in/out so the world stays
+   the hero.
    ========================================================================== */
 
 :root {
@@ -14,8 +14,10 @@
   --gold-bright: #e6cf95;
   --line: rgba(201, 173, 115, 0.3);
   --panel: rgba(12, 12, 14, 0.92);
-  --font-body: 'EB Garamond', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
-  --font-display: 'Cinzel', 'Trajan Pro', 'Optima', Georgia, serif;
+  /* Alt: --font-body: 'Inter', 'Helvetica Neue', Arial, sans-serif; */
+  --font-body: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  /* Alt: --font-display: 'Inter', 'Arial Narrow', Arial, sans-serif; */
+  --font-display: 'Roboto Condensed', 'Arial Narrow', Arial, sans-serif;
 }
 
 * {
