@@ -10,7 +10,7 @@
       "low": {
         "maxPixelRatio": 1.0,
         "antialias": false,
-        "shadowsEnabled": true,
+        "shadowsEnabled": false,
         "shadowMapSize": 1024,
         "viewRadius": 4,
         "detailRadius": 1,
@@ -19,7 +19,10 @@
         "propDensityScale": 0.6,
         "terrainSegments": 64,
         "leafDensityScale": 0.9,
-        "rainParticles": 900
+        "rainParticles": 900,
+        "fxaaEnabled": false,
+        "bloomEnabled": false,
+        "starCount": 12000
       },
       "medium": {
         "maxPixelRatio": 1.25,
@@ -33,7 +36,10 @@
         "propDensityScale": 0.85,
         "terrainSegments": 96,
         "leafDensityScale": 1.25,
-        "rainParticles": 1600
+        "rainParticles": 1600,
+        "fxaaEnabled": true,
+        "bloomEnabled": true,
+        "starCount": 26000
       },
       "high": {
         "maxPixelRatio": 1.5,
@@ -47,7 +53,10 @@
         "propDensityScale": 1.0,
         "terrainSegments": 128,
         "leafDensityScale": 1.5,
-        "rainParticles": 2400
+        "rainParticles": 2400,
+        "fxaaEnabled": true,
+        "bloomEnabled": true,
+        "starCount": 42000
       }
     }
   },

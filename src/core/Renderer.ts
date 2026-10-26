@@ -73,6 +73,8 @@ export class Renderer {
   readonly gpuInfo: GpuInfo;
   private maxPixelRatio: number;
   private pixelRatioScale = 1;
+  private fxaaEnabled: boolean;
+  private bloomEnabled: boolean;
   private composer: EffectComposer | null = null;
   private outputPass: OutputPass | null = null;
   private fxaaPass: ShaderPass | null = null;
@@ -80,6 +82,8 @@ export class Renderer {
 
   constructor(container: HTMLElement, quality: QualitySettings) {
     this.maxPixelRatio = quality.maxPixelRatio;
+    this.fxaaEnabled = quality.fxaaEnabled;
+    this.bloomEnabled = quality.bloomEnabled;
 
     this.webgl = new THREE.WebGLRenderer({
       antialias: quality.antialias,
@@ -136,19 +140,24 @@ export class Renderer {
       ),
     );
     const outputPass = new OutputPass();
-    const uniforms = outputPass.uniforms as Record<string, THREE.IUniform>;
-    uniforms.uTexelSize = { value: new THREE.Vector2(1, 1) };
-    uniforms.uBloomStrength = { value: RENDERER.bloomStrength };
-    uniforms.uBloomThreshold = { value: RENDERER.bloomThreshold };
-    outputPass.material.fragmentShader = BLOOM_OUTPUT_FRAGMENT;
-    outputPass.material.needsUpdate = true;
+    if (this.bloomEnabled) {
+      const uniforms = outputPass.uniforms as Record<string, THREE.IUniform>;
+      uniforms.uTexelSize = { value: new THREE.Vector2(1, 1) };
+      uniforms.uBloomStrength = { value: RENDERER.bloomStrength };
+      uniforms.uBloomThreshold = { value: RENDERER.bloomThreshold };
+      outputPass.material.fragmentShader = BLOOM_OUTPUT_FRAGMENT;
+      outputPass.material.needsUpdate = true;
+    }
     composer.addPass(outputPass);
     // FXAA on the LDR output (the composer path bypasses canvas MSAA).
-    const fxaaPass = new ShaderPass(FXAAShader);
-    composer.addPass(fxaaPass);
+    // Skipped on low quality — saves a full-screen pass on weak/mobile GPUs.
+    if (this.fxaaEnabled) {
+      const fxaaPass = new ShaderPass(FXAAShader);
+      composer.addPass(fxaaPass);
+      this.fxaaPass = fxaaPass;
+    }
     this.composer = composer;
     this.outputPass = outputPass;
-    this.fxaaPass = fxaaPass;
     this.updatePostResolution();
   }
 
@@ -191,8 +200,10 @@ export class Renderer {
     this.webgl.getDrawingBufferSize(this.drawingBufferSize);
     const invW = 1 / Math.max(this.drawingBufferSize.x, 1);
     const invH = 1 / Math.max(this.drawingBufferSize.y, 1);
-    const uniforms = this.outputPass.uniforms as Record<string, THREE.IUniform>;
-    (uniforms.uTexelSize.value as THREE.Vector2).set(invW, invH);
+    if (this.bloomEnabled) {
+      const uniforms = this.outputPass.uniforms as Record<string, THREE.IUniform>;
+      (uniforms.uTexelSize.value as THREE.Vector2).set(invW, invH);
+    }
     if (this.fxaaPass) {
       (this.fxaaPass.material.uniforms.resolution.value as THREE.Vector2).set(invW, invH);
     }

@@ -13,7 +13,7 @@ export class Sky {
   readonly starField: THREE.Points;
   readonly starMaterial: THREE.ShaderMaterial;
 
-  constructor(scene: THREE.Scene) {
+  constructor(scene: THREE.Scene, starCount: number = NIGHT_SKY.starCount) {
     this.material = new THREE.ShaderMaterial({
       vertexShader: SKY_VERTEX,
       fragmentShader: SKY_FRAGMENT,
@@ -47,14 +47,13 @@ export class Sky {
     this.dome.renderOrder = -10;
     scene.add(this.dome);
 
-    const stars = this.buildStars();
+    const stars = this.buildStars(starCount);
     this.starMaterial = stars.material;
     this.starField = stars.points;
     scene.add(this.starField);
   }
 
-  private buildStars(): { points: THREE.Points; material: THREE.ShaderMaterial } {
-    const count = NIGHT_SKY.starCount;
+  private buildStars(count: number): { points: THREE.Points; material: THREE.ShaderMaterial } {
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
     const sizes = new Float32Array(count);

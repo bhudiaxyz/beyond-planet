@@ -55,7 +55,7 @@ export class World {
     this.materials = new MaterialLibrary(seed, this.snowTrail);
     this.terrain = new Terrain(seed, quality.terrainSegments);
     this.biomes = new Biomes(seed);
-    this.sky = new Sky(this.scene);
+    this.sky = new Sky(this.scene, quality.starCount);
     this.environment = new Environment(this.scene, this.sky, seed, quality);
     this.water = new Water(this.environment.uniforms);
     this.grassSettings = createGrassSettings();

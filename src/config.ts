@@ -20,6 +20,9 @@ export interface QualitySettings {
   terrainSegments: number;
   leafDensityScale: number;
   rainParticles: number;
+  fxaaEnabled: boolean;
+  bloomEnabled: boolean;
+  starCount: number;
 }
 
 interface GlobalDefaults {
@@ -84,11 +87,22 @@ export const CLEARINGS = GLOBAL_DEFAULTS.clearings;
 export const HUD = GLOBAL_DEFAULTS.hud;
 export const CAVES = GLOBAL_DEFAULTS.caves;
 
-/** Cheap heuristic for an initial quality level. */
+/** Heuristic for an initial quality level, mobile-aware. */
 export function detectQuality(): QualityLevel {
+  const ua = navigator.userAgent;
+  // iPadOS 13+ reports a Macintosh UA but has maxTouchPoints > 1.
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(ua) ||
+    (navigator.maxTouchPoints > 1 && /Macintosh/i.test(ua));
   const cores = navigator.hardwareConcurrency ?? 4;
-  const memory = (navigator as unknown as { deviceMemory?: number }).deviceMemory ?? 8;
+  // deviceMemory is absent on iOS and Firefox; use a conservative mobile
+  // fallback (3) rather than the desktop fallback (8) to avoid over-tiering.
+  const memory = (navigator as { deviceMemory?: number }).deviceMemory ?? (isMobile ? 3 : 8);
   const auto = GLOBAL_DEFAULTS.quality.autoDetect;
+  if (isMobile) {
+    // Mobile GPUs face thermal and bandwidth constraints — cap at medium.
+    if (cores >= auto.mediumMinCores) return 'medium';
+    return 'low';
+  }
   if (cores >= auto.highMinCores && memory >= auto.highMinMemoryGb) return 'high';
   if (cores >= auto.mediumMinCores) return 'medium';
   return 'low';
